@@ -1,0 +1,62 @@
+# Enlazado interno permitido para Dimensur
+
+URL: https://www.dimensur.es/promociones/cabo-de-gata-sunset
+Nombre: Cabo de Gata Sunset
+Temas: Cabo de Gata, playa, Mediterráneo, vivienda costera, San Miguel de Cabo de Gata, obra nueva cerca del mar
+Anchors sugeridos: Cabo de Gata Sunset, viviendas en Cabo de Gata, obra nueva cerca del mar, promoción junto al Mediterráneo, vivienda en San Miguel de Cabo de Gata
+
+---
+
+URL: https://www.dimensur.es/promociones/nuevo-residencial-trivium-ii
+Nombre: Nuevo Residencial Trivium II
+Temas: Trivium II, Nueva Andalucía, Carrefour, Almería capital, promoción por fases, obra nueva, residencial en Almería
+Anchors sugeridos: Nuevo Residencial Trivium II, promoción residencial en Almería, obra nueva en Almería, viviendas en Trivium II, residencial junto a Nueva Andalucía
+
+---
+
+URL: https://www.dimensur.es/promociones/suncrest-residencial
+Nombre: Suncrest Residencial
+Temas: Suncrest, centro de Almería, antiguo Toblerone, vivienda urbana, promoción residencial, ciudad
+Anchors sugeridos: Suncrest Residencial, promoción en el centro de Almería, viviendas en el centro de Almería, residencial urbano en Almería
+
+---
+
+URL: https://www.dimensur.es/promociones/dimensur-mediterraneo
+Nombre: Dimensur Mediterráneo
+Temas: Vega de Acá, Mediterráneo, obra nueva, vivienda en Almería, residencial, crecimiento urbano
+Anchors sugeridos: Dimensur Mediterráneo, viviendas en Vega de Acá, obra nueva en Vega de Acá, promoción residencial en Almería
+
+---
+
+URL: https://www.dimensur.es/promociones/dimensur-plaza
+Nombre: Dimensur Plaza
+Temas: centro de Almería, garajes, viviendas, promoción urbana, Plaza Guitarrista Julián Arcas
+Anchors sugeridos: Dimensur Plaza, promoción en el centro de Almería, viviendas y garajes en Almería, residencial en Plaza Guitarrista Julián Arcas
+
+---
+
+URL: https://www.dimensur.es/promociones/oficinas-trasteros-y-garajes-en-el-centro-de-almeria
+Nombre: Oficinas, trasteros y garajes en el centro de Almería
+Temas: oficinas, trasteros, garajes, centro de Almería, inversión, activos urbanos
+Anchors sugeridos: oficinas, trasteros y garajes en el centro de Almería, garajes en el centro de Almería, trasteros en Almería, oficinas en Almería
+
+---
+
+URL: https://www.dimensur.es/promociones/otras-promociones-anteriores-desarrolladas-por-dimensur-o-en-las-que-hemos-participado-en-la-gestion
+Nombre: Promociones anteriores de Dimensur
+Temas: historia Dimensur, promociones anteriores, trayectoria, experiencia inmobiliaria, proyectos desarrollados, gestión inmobiliaria
+Anchors sugeridos: promociones anteriores de Dimensur, trayectoria inmobiliaria de Dimensur, proyectos desarrollados por Dimensur, experiencia de Dimensur en Almería
+
+Reglas de enlazado:
+
+* Usar únicamente URLs incluidas en este archivo.
+* No inventar URLs.
+* No meter enlaces internos sin relación semántica.
+* Elegir entre 2 y 4 enlaces internos por artículo cuando sea posible.
+* Si solo encaja 1 enlace, usar solo 1.
+* Los enlaces deben integrarse de forma natural dentro del HTML.
+* No repetir siempre los mismos enlaces en todos los artículos.
+* No poner todos los enlaces juntos al final.
+* Usar anchors variados.
+* Guardar en la hoja qué URLs y anchors se han usado.
+

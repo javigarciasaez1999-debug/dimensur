@@ -1,0 +1,52 @@
+# Información previa de Dimensur
+
+Dimensur es una empresa almeriense vinculada al sector inmobiliario, especializada en consultoría inmobiliaria, gestión de promociones, comercialización de inmuebles y asesoramiento en proyectos inmobiliarios.
+
+Dimensur trabaja principalmente en Almería capital y su entorno, con promociones y proyectos relacionados con zonas como Vega de Acá, Cabo de Gata, centro de Almería, Aguadulce, Roquetas de Mar y otras áreas de la provincia.
+
+La comunicación debe ser profesional, cercana, clara, local, orientada al comprador y optimizada para SEO. El contenido debe parecer una noticia útil e informativa, no un texto excesivamente publicitario.
+
+Temas relevantes:
+
+* Obra nueva en Almería.
+* Promociones inmobiliarias.
+* Vivienda en Vega de Acá.
+* Vivienda cerca del Mediterráneo.
+* Cabo de Gata.
+* Centro de Almería.
+* Garajes, trasteros y oficinas.
+* Evolución urbana de Almería.
+* Compra de vivienda.
+* Inversión inmobiliaria.
+* Calidad de vida.
+* Vivienda eficiente.
+* Promociones residenciales.
+* Trayectoria de Dimensur.
+* Experiencia inmobiliaria en Almería.
+
+Promociones relevantes:
+
+* Cabo de Gata Sunset.
+* Nuevo Residencial Trivium II.
+* Suncrest Residencial.
+* Dimensur Mediterráneo.
+* Dimensur Plaza.
+* Oficinas, trasteros y garajes en el centro de Almería.
+* Promociones anteriores de Dimensur.
+
+Reglas editoriales:
+
+* No escribir artículos genéricos.
+* No repetir siempre la misma introducción sobre Dimensur.
+* No abusar de frases promocionales.
+* No inventar datos.
+* Usar un tono profesional y natural.
+* Priorizar información útil para usuarios interesados en vivienda, inversión, obra nueva y zonas de Almería.
+* Incluir llamadas a la acción suaves y naturales.
+* El contenido debe estar en español.
+* El contenido debe entregarse en HTML limpio.
+* No incluir etiquetas html, head ni body.
+* Usar h2, h3, p, ul, li, strong y enlaces a cuando corresponda.
+* No usar markdown en el contenido final.
+* No usar emojis.
+
