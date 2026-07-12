@@ -42,7 +42,7 @@ def test_excel_backend_accepts_existing_dimensur_headers(tmp_path) -> None:
         [
             "Comprar vivienda",
             "<p>Contenido previo.</p>",
-            "Publicada",
+            "Subida",
             "Comprar vivienda en Almería",
             "Descripcion previa",
             "https://example.com/image.jpg",
