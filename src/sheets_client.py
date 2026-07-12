@@ -170,6 +170,7 @@ class BaseSheetsClient(ABC):
                 continue
             row = self._row_from_values(row_number, values[row_number - 1])
             if row.get("Estado") not in {
+                "Subida",
                 "Publicado",
                 "Publicada",
                 "Generado - No publicado",
