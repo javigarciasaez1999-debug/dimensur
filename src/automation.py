@@ -160,7 +160,7 @@ class EditorialAutomation:
                         },
                     )
                     raise AutomationError(error_message)
-                final_status = "Publicado"
+                final_status = "Subida"
 
             self._save_history(
                 source_id=source_id,
