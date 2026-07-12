@@ -16,8 +16,12 @@ on:
         required: false
         type: string
   schedule:
-    # Miercoles 12:00 en horario de verano de Madrid (10:00 UTC).
-    - cron: "0 10 * * 3"
+    # Se disparan las dos horas UTC candidatas. El script continúa solo cuando
+    # la hora local de Madrid es exactamente las 12:00, también con cambios DST.
+    - cron: "0 10,11 * * 3"
+
+permissions:
+  contents: read
 
 concurrency:
   group: dimensur-news-automation
@@ -38,7 +42,6 @@ jobs:
       GOOGLE_SHEET_NAME: Hoja 1
       GOOGLE_CREDENTIALS_FILE: credentials.json
       GOOGLE_CREDENTIALS_JSON: ${{ secrets.GOOGLE_CREDENTIALS_JSON }}
-      SCHEDULE_MODE: ${{ vars.SCHEDULE_MODE }}
       DIMENSUR_API_URL: https://www.dimensur.es/api/news
       DIMENSUR_API_TOKEN: ${{ secrets.DIMENSUR_API_TOKEN }}
       DEFAULT_AUTHOR: Dimensur
@@ -62,10 +65,10 @@ jobs:
 
     steps:
       - name: Descargar repositorio
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Preparar Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.11"
           cache: pip
@@ -94,13 +97,26 @@ jobs:
             MODE="${{ inputs.mode }}"
             ROW="${{ inputs.row }}"
           else
-            MODE="${SCHEDULE_MODE:-dry-run}"
+            madrid_hour="$(TZ=Europe/Madrid date +%H)"
+            if [ "$madrid_hour" != "12" ]; then
+              echo "Ejecución omitida: en Madrid son las ${madrid_hour}:00, no las 12:00."
+              exit 0
+            fi
+            MODE="publish"
             ROW=""
+          fi
+
+          if [ "$MODE" = "publish" ] && [ -z "$DIMENSUR_API_TOKEN" ]; then
+            echo "Falta el secret DIMENSUR_API_TOKEN; no se inicia una publicación."
+            exit 2
           fi
 
           command=(python main.py)
           if [ "$MODE" = "publish" ]; then
             command+=(--publish)
+            if [ "${{ github.event_name }}" = "schedule" ]; then
+              command+=(--only-create)
+            fi
           else
             command+=(--dry-run)
           fi
