@@ -265,7 +265,7 @@ Así no se pierde información y la hoja continúa siendo manejable.
 - `Crear`: pendiente.
 - `Generando`: reservada por una ejecución.
 - `Generado - No publicado`: dry-run completado.
-- `Publicado`: API completada con HTTP 2xx. También se reconoce `Publicada` como estado histórico de hojas anteriores.
+- `Subida`: API de Dimensur completada con HTTP 2xx. También se reconocen `Publicado` y `Publicada` como estados históricos de hojas anteriores.
 - `Error`: fallo en generación, validación, imagen, hoja o API.
 
 Una fila en `Generando` no se recoge automáticamente para evitar dobles publicaciones. Si una ejecución fue interrumpida y confirmas que no publicó, cambia manualmente su estado a `Crear`.
@@ -294,7 +294,7 @@ Authorization: Bearer <DIMENSUR_API_TOKEN>
 Content-Type: application/json
 ```
 
-Se usa `requests.post(..., json=payload)`, nunca concatenación manual. Solo una respuesta HTTP 2xx marca la fila como `Publicado`. Si la respuesta incluye `url`, `published_url`, `public_url` o `link`, incluso dentro de un objeto anidado, se guarda como URL publicada.
+Se usa `requests.post(..., json=payload)`, nunca concatenación manual. Solo una respuesta HTTP 2xx marca la fila como `Subida`. Si la respuesta incluye `url`, `published_url`, `public_url` o `link`, incluso dentro de un objeto anidado, se guarda como URL publicada.
 
 Antes del primer uso real, haz un dry-run y confirma con el responsable de la API los nombres exactos y la respuesta del endpoint.
 
@@ -366,7 +366,7 @@ tail -f /home/usuario/dimensur-news-automation/logs/automation.log
 Con Hostinger normal, deja Hostinger para la web y ejecuta esta automatización fuera, por ejemplo con GitHub Actions. El archivo `.github/workflows/dimensur-news.yml` ya está preparado para:
 
 - ejecutarse manualmente en modo `dry-run` o `publish`;
-- ejecutarse por calendario los miércoles;
+- publicar por calendario una única fila con `Estado = Crear` cada miércoles a las 12:00 de Madrid;
 - instalar Python y dependencias;
 - crear `credentials.json` desde un secret;
 - leer/escribir la Google Sheet configurada.
@@ -377,23 +377,17 @@ En GitHub, crea estos secrets en `Settings > Secrets and variables > Actions`:
 |---|---|
 | `OPENAI_API_KEY` | Tu clave de OpenAI |
 | `GOOGLE_CREDENTIALS_JSON` | Contenido completo del `credentials.json` de Google |
-| `DIMENSUR_API_TOKEN` | Token de Dimensur, solo si vas a publicar |
+| `DIMENSUR_API_TOKEN` | Token de Dimensur, obligatorio para la publicación programada |
 
-Por seguridad, el calendario hace `dry-run` por defecto. Para publicar automáticamente, crea también una variable de repositorio:
+Antes de activar el calendario, en `Actions > Dimensur News Automation`, ejecuta `Run workflow` con `mode = dry-run`. La publicación programada solo recoge la primera fila en estado `Crear`; no reutiliza filas `Generado - No publicado`. Si falta `DIMENSUR_API_TOKEN`, el workflow se detiene antes de generar contenido o modificar la hoja.
 
-| Variable | Valor |
-|---|---|
-| `SCHEDULE_MODE` | `publish` |
-
-Después, en `Actions > Dimensur News Automation`, ejecuta primero `Run workflow` con `mode = dry-run`. Si escribe correctamente en la hoja, cambia a `publish` cuando quieras publicar.
-
-La ejecución programada usa esta línea:
+La ejecución programada usa dos horas UTC candidatas y solo continúa cuando la hora local de Madrid es exactamente las 12:00:
 
 ```yaml
-- cron: "0 10 * * 3"
+- cron: "0 10,11 * * 3"
 ```
 
-GitHub Actions usa UTC. Ese horario equivale a miércoles 12:00 en horario de verano de Madrid; en invierno habría que ajustarlo a `0 11 * * 3` si quieres mantener las 12:00 exactas.
+Así mantiene las 12:00 tanto en horario de verano como en horario de invierno.
 
 ## Programación con cron
 

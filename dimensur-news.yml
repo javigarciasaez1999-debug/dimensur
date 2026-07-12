@@ -1,0 +1,128 @@
+name: Dimensur News Automation
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: Modo de ejecucion
+        required: true
+        default: dry-run
+        type: choice
+        options:
+          - dry-run
+          - publish
+      row:
+        description: Fila concreta opcional
+        required: false
+        type: string
+  schedule:
+    # Se disparan las dos horas UTC candidatas. El script continúa solo cuando
+    # la hora local de Madrid es exactamente las 12:00, también con cambios DST.
+    - cron: "0 10,11 * * 3"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: dimensur-news-automation
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    env:
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      OPENAI_TEXT_MODEL: gpt-5.5
+      OPENAI_IMAGE_MODEL: gpt-image-2
+      SHEET_BACKEND: google
+      GOOGLE_SHEET_URL: https://docs.google.com/spreadsheets/d/1cXBLoxbZ2KBQkpG1vJMc8aVMfFPJm4nv347DnsdIRw8/edit?usp=sharing
+      GOOGLE_SHEET_ID: ""
+      GOOGLE_SHEET_NAME: Hoja 1
+      GOOGLE_CREDENTIALS_FILE: credentials.json
+      GOOGLE_CREDENTIALS_JSON: ${{ secrets.GOOGLE_CREDENTIALS_JSON }}
+      DIMENSUR_API_URL: https://www.dimensur.es/api/news
+      DIMENSUR_API_TOKEN: ${{ secrets.DIMENSUR_API_TOKEN }}
+      DEFAULT_AUTHOR: Dimensur
+      DEFAULT_CATEGORIES: Noticias
+      DEFAULT_STATUS: publish
+      DRY_RUN: "true"
+      GENERATE_IMAGES_IN_DRY_RUN: "false"
+      MAX_REGENERATION_ATTEMPTS: "3"
+      MIN_CONTENT_WORDS: "900"
+      MAX_CONTENT_WORDS: "1400"
+      MAX_INTERNAL_LINKS: "4"
+      MIN_INTERNAL_LINKS: "2"
+      CONTENT_SIMILARITY_THRESHOLD: "0.58"
+      IMAGE_SIMILARITY_THRESHOLD: "0.52"
+      OPENAI_TIMEOUT_SECONDS: "180"
+      DIMENSUR_API_TIMEOUT_SECONDS: "60"
+      IMAGE_SIZE: 1536x1024
+      IMAGE_QUALITY: medium
+      TIMEZONE: Europe/Madrid
+      LOG_LEVEL: INFO
+
+    steps:
+      - name: Descargar repositorio
+        uses: actions/checkout@v6
+
+      - name: Preparar Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Instalar dependencias
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+
+      - name: Crear credentials.json
+        run: |
+          python - <<'PY'
+          import os
+          from pathlib import Path
+
+          credentials = os.environ.get("GOOGLE_CREDENTIALS_JSON", "").strip()
+          if not credentials:
+              raise SystemExit("Falta el secret GOOGLE_CREDENTIALS_JSON")
+          Path("credentials.json").write_text(credentials, encoding="utf-8")
+          PY
+
+      - name: Ejecutar automatizacion
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            MODE="${{ inputs.mode }}"
+            ROW="${{ inputs.row }}"
+          else
+            madrid_hour="$(TZ=Europe/Madrid date +%H)"
+            if [ "$madrid_hour" != "12" ]; then
+              echo "Ejecución omitida: en Madrid son las ${madrid_hour}:00, no las 12:00."
+              exit 0
+            fi
+            MODE="publish"
+            ROW=""
+          fi
+
+          if [ "$MODE" = "publish" ] && [ -z "$DIMENSUR_API_TOKEN" ]; then
+            echo "Falta el secret DIMENSUR_API_TOKEN; no se inicia una publicación."
+            exit 2
+          fi
+
+          command=(python main.py)
+          if [ "$MODE" = "publish" ]; then
+            command+=(--publish)
+            if [ "${{ github.event_name }}" = "schedule" ]; then
+              command+=(--only-create)
+            fi
+          else
+            command+=(--dry-run)
+          fi
+
+          if [ -n "$ROW" ]; then
+            command+=(--row "$ROW")
+          fi
+
+          "${command[@]}"

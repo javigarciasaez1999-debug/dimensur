@@ -27,6 +27,14 @@ def parse_args() -> argparse.Namespace:
         help="Publica aunque DRY_RUN=true en el archivo .env.",
     )
     parser.add_argument(
+        "--only-create",
+        action="store_true",
+        help=(
+            "Al seleccionar automáticamente una fila, acepta solo Estado = Crear. "
+            "Útil para publicaciones programadas."
+        ),
+    )
+    parser.add_argument(
         "--row",
         type=int,
         help="Procesa una fila concreta de la hoja (la cabecera es la fila 1).",
@@ -58,7 +66,7 @@ def main() -> int:
         success = automation.run(
             dry_run=dry_run,
             row_number=args.row,
-            allow_generated_row=args.publish,
+            allow_generated_row=args.publish and not args.only_create,
         )
         return 0 if success else 1
     except Exception as exc:
