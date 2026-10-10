@@ -16,9 +16,10 @@ on:
         required: false
         type: string
   schedule:
-    # Se disparan las dos horas UTC candidatas. El script continúa solo cuando
-    # la hora local de Madrid es exactamente las 12:00, también con cambios DST.
-    - cron: "0 10,11 * * 3"
+    # Una sola ejecución semanal; GitHub ajusta automáticamente verano/invierno.
+    # No filtrar por la hora de inicio: el runner puede arrancar con retraso.
+    - cron: "0 12 * * 3"
+      timezone: Europe/Madrid
 
 permissions:
   contents: read
@@ -92,37 +93,11 @@ jobs:
 
       - name: Ejecutar automatizacion
         shell: bash
-        run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            MODE="${{ inputs.mode }}"
-            ROW="${{ inputs.row }}"
-          else
-            madrid_hour="$(TZ=Europe/Madrid date +%H)"
-            if [ "$madrid_hour" != "12" ]; then
-              echo "Ejecución omitida: en Madrid son las ${madrid_hour}:00, no las 12:00."
-              exit 0
-            fi
-            MODE="publish"
-            ROW=""
-          fi
+        env:
+          INPUT_MODE: ${{ inputs.mode }}
+          INPUT_ROW: ${{ inputs.row }}
+        run: bash scripts/run_github.sh
 
-          if [ "$MODE" = "publish" ] && [ -z "$DIMENSUR_API_TOKEN" ]; then
-            echo "Falta el secret DIMENSUR_API_TOKEN; no se inicia una publicación."
-            exit 2
-          fi
-
-          command=(python main.py)
-          if [ "$MODE" = "publish" ]; then
-            command+=(--publish)
-            if [ "${{ github.event_name }}" = "schedule" ]; then
-              command+=(--only-create)
-            fi
-          else
-            command+=(--dry-run)
-          fi
-
-          if [ -n "$ROW" ]; then
-            command+=(--row "$ROW")
-          fi
-
-          "${command[@]}"
+      - name: Eliminar credenciales temporales
+        if: always()
+        run: rm -f credentials.json

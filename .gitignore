@@ -1,0 +1,17 @@
+.env
+credentials.json
+*.zip
+*.xlsx
+*.xlsm
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.venv/
+venv/
+data/images/*
+!data/images/.gitkeep
+data/payloads/*
+!data/payloads/.gitkeep
+logs/*
+!logs/.gitkeep

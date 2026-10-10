@@ -73,4 +73,7 @@ class SheetRow:
 
     def get(self, key: str, default: str = "") -> str:
         value = self.values.get(key, default)
-        return str(value).strip() if value is not None else default
+        if value is None:
+            return default
+        # Estado es un valor de control exacto, no texto editorial normalizable.
+        return str(value) if key == "Estado" else str(value).strip()

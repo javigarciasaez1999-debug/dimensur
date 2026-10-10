@@ -39,7 +39,10 @@ def parse_args() -> argparse.Namespace:
         type=int,
         help="Procesa una fila concreta de la hoja (la cabecera es la fila 1).",
     )
-    return parser.parse_args()
+    args = parser.parse_args()
+    if args.only_create and args.row is not None:
+        parser.error("--only-create selecciona la primera fila Crear; no admite --row.")
+    return args
 
 
 def main() -> int:
