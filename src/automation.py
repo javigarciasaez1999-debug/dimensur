@@ -66,12 +66,14 @@ class EditorialAutomation:
             title,
         )
 
+        claimed = False
         try:
             self._claim_row(
                 row,
                 allow_generated_row,
                 explicit_row=row_number is not None,
             )
+            claimed = True
             if not title:
                 raise AutomationError("La columna Título base está vacía.")
 
@@ -200,7 +202,9 @@ class EditorialAutomation:
             return True
         except Exception as exc:
             self.logger.exception("La automatización terminó con error: %s", exc)
-            self._mark_error(row.row_number, str(exc))
+            # Si otra ejecución/usuario cambió Estado, no sobrescribir su fila.
+            if claimed:
+                self._mark_error(row.row_number, str(exc))
             return False
 
     def _select_row(

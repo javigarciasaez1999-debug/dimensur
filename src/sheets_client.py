@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 import logging
+import random
+import time
 import unicodedata
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any, Callable, Iterable
 
 import gspread
 from gspread.exceptions import APIError, SpreadsheetNotFound, WorksheetNotFound
@@ -117,7 +119,7 @@ class BaseSheetsClient(ABC):
         for header, column in self._column_by_header.items():
             index = column - 1
             mapped[header] = (
-                str(values[index]).strip()
+                str(values[index])
                 if index < len(values) and values[index] is not None
                 else ""
             )
@@ -142,7 +144,7 @@ class BaseSheetsClient(ABC):
         for row_number, row_values in enumerate(values[1:], start=2):
             status_index = status_column - 1
             status = (
-                str(row_values[status_index]).strip()
+                row_values[status_index]
                 if status_index < len(row_values)
                 else ""
             )
@@ -215,9 +217,13 @@ class GoogleSheetsClient(BaseSheetsClient):
             )
         try:
             client = gspread.service_account(filename=str(self.credentials_file))
-            spreadsheet = client.open_by_key(self.spreadsheet_id)
-            self.worksheet = spreadsheet.worksheet(self.worksheet_name)
-            raw_headers = self.worksheet.row_values(1)
+            spreadsheet = self._read_with_retries(
+                lambda: client.open_by_key(self.spreadsheet_id)
+            )
+            self.worksheet = self._read_with_retries(
+                lambda: spreadsheet.worksheet(self.worksheet_name)
+            )
+            raw_headers = self._read_with_retries(lambda: self.worksheet.row_values(1))
             if not any(str(value).strip() for value in raw_headers):
                 self.worksheet.update(range_name="A1:X1", values=[HEADERS])
                 raw_headers = HEADERS
@@ -237,13 +243,28 @@ class GoogleSheetsClient(BaseSheetsClient):
                 f"No se pudo abrir Google Sheet '{self.worksheet_name}': {exc}"
             ) from exc
 
+    def _read_with_retries(self, operation: Callable[[], Any]) -> Any:
+        # Repetir solo lecturas: nunca reiniciar una publicación ni una escritura.
+        for attempt in range(4):
+            try:
+                return operation()
+            except APIError as exc:
+                if exc.code not in {429, 500, 502, 503, 504} or attempt == 3:
+                    raise
+                delay = 2 ** attempt + random.random()
+                self.logger.warning(
+                    "Lectura de Google Sheets fallida (HTTP %s); reintento %s/3 en %.2f s",
+                    exc.code, attempt + 1, delay,
+                )
+                time.sleep(delay)
+
     def _require_worksheet(self) -> gspread.Worksheet:
         if self.worksheet is None:
             raise RuntimeError("La hoja no está cargada. Llama a load_sheet().")
         return self.worksheet
 
     def _all_values(self) -> list[list[Any]]:
-        return self._require_worksheet().get_all_values()
+        return self._read_with_retries(self._require_worksheet().get_all_values)
 
     def _write_fields(self, row_number: int, fields: dict[str, Any]) -> None:
         worksheet = self._require_worksheet()

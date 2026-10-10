@@ -153,7 +153,7 @@ La pestaña debe llamarse `Noticias` o coincidir con `GOOGLE_SHEET_NAME`. La fil
 
 Una hoja completamente vacía recibe estas cabeceras automáticamente. Si ya contiene cabeceras parciales, el programa conserva las existentes, reconoce algunos nombres antiguos habituales y añade al final las que falten.
 
-Para crear una noticia basta con rellenar `Título base`, opcionalmente `Keyword principal`, y poner `Crear` exactamente en `Estado`.
+Para crear una noticia basta con rellenar `Título base`, opcionalmente `Keyword principal`, y poner `Crear` exactamente en `Estado`. Se respetan mayúsculas y espacios: `crear`, `CREAR`, ` Crear` y `Crear ` no son válidos.
 
 ## Uso con Excel
 
@@ -381,13 +381,22 @@ En GitHub, crea estos secrets en `Settings > Secrets and variables > Actions`:
 
 Antes de activar el calendario, en `Actions > Dimensur News Automation`, ejecuta `Run workflow` con `mode = dry-run`. La publicación programada solo recoge la primera fila en estado `Crear`; no reutiliza filas `Generado - No publicado`. Si falta `DIMENSUR_API_TOKEN`, el workflow se detiene antes de generar contenido o modificar la hoja.
 
-La ejecución programada usa dos horas UTC candidatas y solo continúa cuando la hora local de Madrid es exactamente las 12:00:
+La ejecución programada tiene un único disparador semanal con zona horaria nativa de GitHub Actions:
 
 ```yaml
-- cron: "0 10,11 * * 3"
+- cron: "0 12 * * 3"
+  timezone: Europe/Madrid
 ```
 
-Así mantiene las 12:00 tanto en horario de verano como en horario de invierno.
+Así mantiene las 12:00 tanto en horario de verano como en horario de invierno (10:00 UTC y 11:00 UTC, respectivamente). No se comprueba la hora real de arranque: si GitHub entrega el evento con retraso, se procesa igualmente. El anterior filtro `madrid_hour != 12` descartaba estos eventos con un falso resultado correcto.
+
+GitHub Actions puede retrasar o, bajo mucha carga, descartar eventos programados; las 12:00 son la hora solicitada, no una garantía de puntualidad. Esta corrección elimina el descarte del propio workflow. Documentación: https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#schedule
+
+Cada ejecución programada procesa como máximo una fila: la primera de arriba abajo cuyo `Estado` sea exactamente `Crear`. Si no existe, finaliza sin publicar. Si falla esa fila, no continúa con la siguiente. La selección se vuelve a validar antes de cambiar el estado a `Generando`; una fila que ya no sea elegible se deja intacta.
+
+La concurrencia impide dos ejecuciones simultáneas de este workflow. Un `Re-run jobs` de una ejecución programada se rechaza antes de procesar filas para no consumir una segunda noticia. Para recuperar un fallo, revisa antes la respuesta de Dimensur y el estado de la hoja; solo si confirmas que no se publicó, utiliza la ejecución manual con `mode = publish` y la fila concreta. No vuelvas a poner `Crear` sin comprobar el resultado de la API.
+
+Los pushes solo lanzan el workflow separado **Tests (sin publicaciones)**, sin secretos ni llamadas reales. La publicación automática solo se dispara por calendario; la manual sigue usando `dry-run` por defecto. Ten en cuenta que el dry-run editorial existente sí genera contenido y escribe en la hoja (`Generado - No publicado`); para verificar el código sin tocar la hoja, utiliza los tests.
 
 ## Programación con cron
 
@@ -425,9 +434,16 @@ Iniciar en: C:\ruta\dimensur-news-automation
 python -m pytest -q
 ```
 
-Las pruebas cubren parsing de enlaces, slug, helpers HTML, similitud, payload y el backend Excel. No realizan llamadas reales a OpenAI, Google ni Dimensur.
+Las pruebas cubren parsing de enlaces, slug, helpers HTML, similitud, payload, backend Excel y Google Sheets simulado. También verifican la coincidencia exacta de `Crear`, una sola fila por ejecución, ausencia de pendientes, errores sin pasar a la siguiente fila, cambios de estado antes de reservarla, dry-run sin publicación, retrasos del runner, verano/invierno, reejecuciones y validación de entradas. La red está bloqueada en los tests: no realizan llamadas reales a OpenAI, Google ni Dimensur.
 
 ## Errores comunes
+
+Las lecturas de Google Sheets reintentan los errores temporales HTTP 429, 500,
+502, 503 y 504 hasta tres veces, con esperas crecientes y una pequeña variación
+aleatoria. Si el fallo persiste, la ejecución termina con error. Los errores de
+permisos y configuración se muestran inmediatamente. Las escrituras y la API
+de publicación no se reintentan automáticamente. Referencia:
+https://developers.google.com/workspace/sheets/api/troubleshoot-api-errors
 
 ### `OPENAI_API_KEY está vacío`
 
